@@ -5,7 +5,7 @@ function copy {
   MODULE="$1"
   BUNDLE="$MODULE-$VERSION.jar"
   cp $MODULE/target/$BUNDLE $TARGET/osgi/equinox/bundles
-  echo "bundles/$BUNDLE@start, \\" >> $TARGET/osgi/equinox/config/config.ini  
+  echo "bundles/$BUNDLE@start, \\" >> $TARGET/osgi/equinox/config-template/config.ini  
 }
 
 if [ ! -e $TARGET/osgi/equinox ] 
@@ -15,10 +15,10 @@ then
     exit
 fi
 
-cp $TARGET/osgi/equinox/config-template/config.ini $TARGET/osgi/equinox/config/config.ini
+cp $TARGET/osgi/equinox/config-template/config.ini.base $TARGET/osgi/equinox/config-template/config.ini
 
 copy cloud-infra-framework-service
 copy cloud-infra-services
 copy cloud-infra-zookeeper-plugin
 
-echo " " >> $TARGET/osgi/equinox/config/config.ini  
+echo " " >> $TARGET/osgi/equinox/config-template/config.ini  
