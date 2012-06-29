@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.coderthoughts.cloud.framework.service.api.OSGiFramework;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
 public class Activator implements BundleActivator {
@@ -28,6 +29,17 @@ public class Activator implements BundleActivator {
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put(OSGI_FRAMEWORK_UUID, uuid);
         props.put("org.coderthoughts.framework.ip", publicDNS);
+        props.put("org.coderthoughts.cloud.name", "Red Hat Openshift");
+        props.put("org.coderthoughts.cloud.version", "0.9");
+        props.put(Constants.FRAMEWORK_VERSION, context.getProperty(Constants.FRAMEWORK_VERSION));
+        props.put(Constants.FRAMEWORK_PROCESSOR, context.getProperty(Constants.FRAMEWORK_PROCESSOR));
+        props.put(Constants.FRAMEWORK_OS_NAME, context.getProperty(Constants.FRAMEWORK_OS_NAME));
+        props.put(Constants.FRAMEWORK_OS_VERSION, context.getProperty(Constants.FRAMEWORK_OS_VERSION));
+        props.put("java.version", System.getProperty("java.version"));
+        props.put("java.runtime.version", System.getProperty("java.runtime.version"));
+        props.put("java.vm.vendor", System.getProperty("java.vm.vendor"));
+        props.put("java.vm.version", System.getProperty("java.vm.version"));
+        props.put("java.vm.name", System.getProperty("java.vm.name"));
         props.put("service.exported.interfaces", "*");
         props.put("service.exported.configs", "org.coderthoughts.configtype.cloud");
 
