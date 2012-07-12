@@ -49,7 +49,7 @@ public class Activator implements BundleActivator {
         props.put("java.vm.version", System.getProperty("java.vm.version"));
         props.put("java.vm.name", System.getProperty("java.vm.name"));
         props.put("service.exported.interfaces", "*");
-        props.put("service.exported.configs", "org.coderthoughts.configtype.cloud");
+        props.put("service.exported.configs", new String [] {"org.coderthoughts.configtype.cloud", "<<nodefault>>"});
 
         RemoteServiceFactory svcFactory = new OSGiFrameworkServiceFactory(monitorAdminServiceTracker);
         props.put("org.coderthoughts.remote.service.factory", svcFactory);
