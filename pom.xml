@@ -32,7 +32,6 @@
   <modules>
     <module>cloud-infra-framework-service</module>
     <module>cloud-infra-services</module>
-    <module>cloud-infra-zookeeper-plugin</module>
   </modules>
 </project>
 

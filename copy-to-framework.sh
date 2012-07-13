@@ -19,5 +19,4 @@ cp $TARGET/osgi/equinox/config-template/config.ini.base $TARGET/osgi/equinox/con
 
 copy cloud-infra-framework-service
 copy cloud-infra-services
-copy cloud-infra-zookeeper-plugin
 

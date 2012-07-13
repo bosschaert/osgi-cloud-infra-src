@@ -1,5 +1,7 @@
 package org.coderthoughts.cloud.services.impl;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,9 +31,17 @@ public class Activator implements BundleActivator {
     private ServiceTracker cloudServiceTracker;
     private ServiceTracker endpointListenerServiceTracker;
     private ServiceTracker rsaServiceTracker;
+    private String publicDNS;
+    private int publicPort = 80;
 
     @Override
     public void start(final BundleContext context) throws Exception {
+        publicDNS = System.getenv("OPENSHIFT_GEAR_DNS");
+        if (publicDNS == null) {
+            // TODO wrap this in a framework property...
+            throw new Exception("Environment variable OPENSHIFT_GEAR_DNS is not set. It should be set to the public DNS name of the current instance.");
+        }
+
         rsaServiceTracker = new ServiceTracker(context, RemoteServiceAdmin.class.getName(), null);
 
         endpointListenerServiceTracker = new ServiceTracker(context, EndpointListener.class.getName(), null) {
@@ -75,7 +85,6 @@ public class Activator implements BundleActivator {
 
                 try {
                     rsa = (RemoteServiceAdmin) rsaServiceTracker.waitForService(30000);
-                    System.out.println("*** Found RSA: " + rsa);
                     if (rsa == null)
                         throw new RuntimeException("");
 
@@ -95,7 +104,6 @@ public class Activator implements BundleActivator {
     }
 
     private void registerRemotedService(ServiceReference sr) {
-        System.out.println("@@@ About to export: " + sr);
         Long serviceID = (Long) sr.getProperty(Constants.SERVICE_ID);
         if (registrations.containsKey(serviceID))
             return;
@@ -105,17 +113,15 @@ public class Activator implements BundleActivator {
         props.put("org.apache.cxf.ws.httpservice.context", "/" + serviceID);
 
         Collection<ExportRegistration> regs = rsa.exportService(sr, props);
-        System.out.println("@@@ Exported: " + regs);
         registrations.put(serviceID, regs);
 
         // Call interested EndpointListeners (will publish in Discovery)
-        // TODO can this piece perform what the zookeeper-plugin is doing?
         for (ServiceReference elSR : endpointListeners.keySet()) {
             for (String scope : getEndpointListenerScopes(elSR)) {
                 try {
                     Filter filter = FrameworkUtil.createFilter(scope);
                     for (ExportRegistration reg : regs) {
-                        EndpointDescription ed = reg.getExportReference().getExportedEndpoint();
+                        EndpointDescription ed = transformEndpointDescription(reg.getExportReference().getExportedEndpoint());
                         Hashtable<String, Object> ht = new Hashtable<String, Object>(ed.getProperties());
                         if (filter.match(ht)) {
                             EndpointListener el = endpointListeners.get(elSR);
@@ -150,10 +156,29 @@ public class Activator implements BundleActivator {
     }
 
     private void unRegisterRemotedService(ServiceReference sr) {
-        System.out.println("**** Unregistered matching service: " + sr);
         Long serviceID = (Long) sr.getProperty(Constants.SERVICE_ID);
         for(ExportRegistration reg : registrations.get(serviceID)) {
             reg.close();
+        }
+    }
+
+    private EndpointDescription transformEndpointDescription(EndpointDescription ed) {
+        Map<String, Object> props = new HashMap<String, Object>(ed.getProperties());
+        replaceProperty(props, "endpoint.id");
+        replaceProperty(props, "org.apache.cxf.ws.address");
+        return new EndpointDescription(props);
+    }
+
+    private void replaceProperty(Map<String, Object> properties, String key) {
+        Object eid = properties.get(key);
+        if (eid instanceof String) {
+            try {
+                URL eidURL = new URL((String) eid);
+                URL newURL = new URL(eidURL.getProtocol(), publicDNS, publicPort, eidURL.getFile());
+                properties.put(key, newURL.toExternalForm());
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
