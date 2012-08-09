@@ -1,5 +1,6 @@
 package org.coderthoughts.cloud.services.impl;
 
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.management.MBeanServer;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -18,6 +21,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.remoteserviceadmin.EndpointDescription;
 import org.osgi.service.remoteserviceadmin.EndpointListener;
 import org.osgi.service.remoteserviceadmin.ExportRegistration;
@@ -27,6 +31,7 @@ import org.osgi.util.tracker.ServiceTracker;
 public class Activator implements BundleActivator {
     private Map<ServiceReference, EndpointListener> endpointListeners = new ConcurrentHashMap<ServiceReference, EndpointListener>();
     private Map<Long, Collection<ExportRegistration>> registrations = new ConcurrentHashMap<Long, Collection<ExportRegistration>>();
+    private ServiceRegistration mbsRegistration;
     private RemoteServiceAdmin rsa;
     private ServiceTracker cloudServiceTracker;
     private ServiceTracker endpointListenerServiceTracker;
@@ -41,6 +46,10 @@ public class Activator implements BundleActivator {
             // TODO wrap this in a framework property...
             throw new Exception("Environment variable OPENSHIFT_GEAR_DNS is not set. It should be set to the public DNS name of the current instance.");
         }
+
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        mbsRegistration = context.registerService(MBeanServer.class.getName(), mbs, null);
+        System.out.println("*** Registered MBean Server");
 
         rsaServiceTracker = new ServiceTracker(context, RemoteServiceAdmin.class.getName(), null);
 
@@ -101,6 +110,8 @@ public class Activator implements BundleActivator {
         cloudServiceTracker.close();
         rsaServiceTracker.close();
         endpointListenerServiceTracker.close();
+
+        mbsRegistration.unregister();
     }
 
     private void registerRemotedService(ServiceReference sr) {
