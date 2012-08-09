@@ -20,3 +20,5 @@ cp $TARGET/osgi/equinox/config-template/config.ini.base $TARGET/osgi/equinox/con
 copy cloud-infra-framework-service
 copy cloud-infra-services
 
+# This one will most likely be overwritten by a subsequent script
+cp $TARGET/osgi/equinox/config-template/config.ini $TARGET/osgi/equinox/config/config.ini
