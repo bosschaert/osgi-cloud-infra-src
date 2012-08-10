@@ -1,6 +1,5 @@
 package org.coderthoughts.cloud.services.impl;
 
-import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -11,8 +10,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.management.MBeanServer;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -46,10 +43,6 @@ public class Activator implements BundleActivator {
             // TODO wrap this in a framework property...
             throw new Exception("Environment variable OPENSHIFT_GEAR_DNS is not set. It should be set to the public DNS name of the current instance.");
         }
-
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        mbsRegistration = context.registerService(MBeanServer.class.getName(), mbs, null);
-        System.out.println("*** Registered MBean Server");
 
         rsaServiceTracker = new ServiceTracker(context, RemoteServiceAdmin.class.getName(), null);
 
