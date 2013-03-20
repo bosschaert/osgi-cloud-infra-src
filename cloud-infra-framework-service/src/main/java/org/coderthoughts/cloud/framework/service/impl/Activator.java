@@ -3,8 +3,7 @@ package org.coderthoughts.cloud.framework.service.impl;
 import java.util.Hashtable;
 import java.util.UUID;
 
-import org.apache.cxf.dosgi.dsw.RemoteServiceFactory;
-import org.coderthoughts.cloud.framework.service.api.OSGiFramework;
+import org.coderthoughts.cloud.framework.service.api.FrameworkStatus;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -50,11 +49,19 @@ public class Activator implements BundleActivator {
         props.put("java.vm.name", System.getProperty("java.vm.name"));
         props.put("service.exported.interfaces", "*");
         props.put("service.exported.configs", new String [] {"org.coderthoughts.configtype.cloud", "<<nodefault>>"});
+        props.put("service.exported.type", FrameworkStatus.class);
 
+        /*
         RemoteServiceFactory svcFactory = new OSGiFrameworkServiceFactory(monitorAdminServiceTracker);
         props.put("org.coderthoughts.remote.service.factory", svcFactory);
         OSGiFramework fwkService = new OSGiFrameworkImpl("localhost", monitorAdminServiceTracker);
         reg = context.registerService(OSGiFramework.class.getName(), fwkService, props);
+        */
+
+//        // context.registerService(OSGiFramework.class.getName(), service, properties)
+        RemoteOSGiFrameworkFactoryService fs = new RemoteOSGiFrameworkFactoryService(context, monitorAdminServiceTracker);
+
+        context.registerService(RemoteOSGiFrameworkFactoryService.class.getName(), fs, props);
     }
 
     @Override

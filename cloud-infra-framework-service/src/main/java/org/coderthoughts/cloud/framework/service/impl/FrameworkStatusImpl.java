@@ -1,21 +1,22 @@
 package org.coderthoughts.cloud.framework.service.impl;
 
-import org.coderthoughts.cloud.framework.service.api.OSGiFramework;
+import org.apache.cxf.dosgi.dsw.ClientInfo;
+import org.coderthoughts.cloud.framework.service.api.FrameworkStatus;
 import org.osgi.service.monitor.MonitorAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class OSGiFrameworkImpl implements OSGiFramework {
-    private String ipAddress;
-    private ServiceTracker monitorAdminTracker;
+public class FrameworkStatusImpl implements FrameworkStatus {
+    private final ClientInfo client;
+    private final ServiceTracker monitorAdminTracker;
 
-    public OSGiFrameworkImpl(String ipAddr, ServiceTracker monitorAdminST) {
-        ipAddress = ipAddr;
-        monitorAdminTracker = monitorAdminST;
+    public FrameworkStatusImpl(ClientInfo client, ServiceTracker monitorAdminST) {
+        this.client = client;
+        this.monitorAdminTracker = monitorAdminST;
     }
 
     @Override
     public String getFrameworkVariable(String name) {
-        System.out.println("*** Obtaining framework variable: " + name + " requester IP:" + ipAddress);
+        System.out.println("*** Obtaining framework variable: " + name + " requester IP:" + client);
         if (FV_AVAILABLE_MEMORY.equals(name)) {
             return "" + Runtime.getRuntime().freeMemory();
         }
@@ -24,13 +25,13 @@ public class OSGiFrameworkImpl implements OSGiFramework {
 
     @Override
     public String getServiceVariable(long serviceID, String name) {
-        System.out.println("*** Obtaining info: " + name + " for " + serviceID + " requester IP:" + ipAddress);
+        System.out.println("*** Obtaining info: " + name + " for " + serviceID + " requester IP:" + client);
         MonitorAdmin ma = (MonitorAdmin) monitorAdminTracker.getService();
         if (ma == null)
             return SERVICE_STATUS_SERVER_ERROR;
 
         String monitorableId = MONITORABLE_SERVICE_PID_PREFIX + serviceID;
-        String variableName = name + "." + ipAddress;
+        String variableName = name + "." + client;
         boolean variableFound = false;
         for (String var : ma.getStatusVariableNames(monitorableId)) {
             // A little awkward to have to go through all the names, but array traversal is quite fast

@@ -1,6 +1,6 @@
 package org.coderthoughts.cloud.framework.service.api;
 
-public interface OSGiFramework {
+public interface FrameworkStatus {
     static final String FV_AVAILABLE_MEMORY = "available.memory";
 
     static final String MONITORABLE_SERVICE_PID_PREFIX = "service."; // To be suffixed by the local service ID
