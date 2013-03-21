@@ -1,20 +1,22 @@
 package org.coderthoughts.cloud.framework.service.impl;
 
+import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.UUID;
 
-import org.coderthoughts.cloud.framework.service.api.FrameworkMetadataPublisher;
 import org.coderthoughts.cloud.framework.service.api.FrameworkStatus;
+import org.coderthoughts.cloud.framework.service.api.FrameworkStatusAddition;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.monitor.MonitorAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator {
     private static final String OSGI_FRAMEWORK_UUID = "org.osgi.framework.uuid";
-    private ServiceTracker monitorAdminServiceTracker;
+    private ServiceTracker monitorAdminServiceTracker, frameworkStatusAdditionServiceTracker;
     private ServiceRegistration reg;
 
     @Override
@@ -64,13 +66,41 @@ public class Activator implements BundleActivator {
 
         reg = context.registerService(RemoteOSGiFrameworkFactoryService.class.getName(), fs, props);
 
-        FrameworkMetadataPublisher publisher = new FrameworkMetadataPublisherImpl(reg);
-        context.registerService(FrameworkMetadataPublisher.class.getName(), publisher, null);
+        ServiceTracker frameworkStatusAdditionServiceTracker = new ServiceTracker(context, FrameworkStatusAddition.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Object svc = super.addingService(reference);
+                if (svc instanceof FrameworkStatusAddition) {
+                    FrameworkStatusAddition fsa = (FrameworkStatusAddition) svc;
+                    Dictionary<String, Object> dict = getCurProperties(reg);
+                    for (String key : fsa.getAdditionalPropertyKeys()) {
+                        dict.put(key, fsa.getAdditionalProperty(key));
+                    }
+                    reg.setProperties(dict);
+                }
+                return svc;
+            }
+        };
+        frameworkStatusAdditionServiceTracker.open();
+
+//        FrameworkMetadataPublisher publisher = new FrameworkMetadataPublisherImpl(reg);
+//        context.registerService(FrameworkMetadataPublisher.class.getName(), publisher, null);
+    }
+
+    private Dictionary<String, Object> getCurProperties(ServiceRegistration reg) {
+        Dictionary<String, Object> dict = new Hashtable<String, Object>();
+
+        for (String key : reg.getReference().getPropertyKeys()) {
+            dict.put(key, reg.getReference().getProperty(key));
+        }
+
+        return dict;
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        reg.unregister();
+        // reg.unregister();
         monitorAdminServiceTracker.close();
+        frameworkStatusAdditionServiceTracker.close();
     }
 }

@@ -23,6 +23,12 @@ public class FrameworkStatusImpl implements FrameworkStatus {
         throw new IllegalArgumentException(name);
     }
 
+
+    @Override
+    public String[] getFrameworkVariableNames() {
+        return new String [] {FV_AVAILABLE_MEMORY}; // TODO take FrameworkStatusAddition into account
+    }
+
     @Override
     public String getServiceVariable(long serviceID, String name) {
         System.out.println("*** Obtaining info: " + name + " for " + serviceID + " requester IP:" + client);

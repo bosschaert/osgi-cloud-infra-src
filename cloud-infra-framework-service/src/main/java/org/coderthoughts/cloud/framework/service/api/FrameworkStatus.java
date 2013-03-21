@@ -34,6 +34,7 @@ public interface FrameworkStatus {
      * @return The value of the framework variable.
      */
     String getFrameworkVariable(String name);
+    String[] getFrameworkVariableNames();
 
     /**
      * Obtain a service variable value. The supported service variables are listed as
