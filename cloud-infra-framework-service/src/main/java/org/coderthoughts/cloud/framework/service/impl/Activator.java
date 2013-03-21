@@ -3,6 +3,7 @@ package org.coderthoughts.cloud.framework.service.impl;
 import java.util.Hashtable;
 import java.util.UUID;
 
+import org.coderthoughts.cloud.framework.service.api.FrameworkMetadataPublisher;
 import org.coderthoughts.cloud.framework.service.api.FrameworkStatus;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -61,7 +62,10 @@ public class Activator implements BundleActivator {
 //        // context.registerService(OSGiFramework.class.getName(), service, properties)
         RemoteOSGiFrameworkFactoryService fs = new RemoteOSGiFrameworkFactoryService(context, monitorAdminServiceTracker);
 
-        context.registerService(RemoteOSGiFrameworkFactoryService.class.getName(), fs, props);
+        reg = context.registerService(RemoteOSGiFrameworkFactoryService.class.getName(), fs, props);
+
+        FrameworkMetadataPublisher publisher = new FrameworkMetadataPublisherImpl(reg);
+        context.registerService(FrameworkMetadataPublisher.class.getName(), publisher, null);
     }
 
     @Override
