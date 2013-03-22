@@ -7,6 +7,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.cxf.dosgi.dsw.RemoteServiceFactory;
 import org.coderthoughts.cloud.framework.service.api.FrameworkStatus;
 import org.coderthoughts.cloud.framework.service.api.FrameworkStatusAddition;
 import org.osgi.framework.BundleActivator;
@@ -65,9 +66,8 @@ public class Activator implements BundleActivator {
         */
 
 //        // context.registerService(OSGiFramework.class.getName(), service, properties)
-        RemoteOSGiFrameworkFactoryService fs = new RemoteOSGiFrameworkFactoryService(context, monitorAdminServiceTracker);
-
-        reg = context.registerService(RemoteOSGiFrameworkFactoryService.class.getName(), fs, props);
+        RemoteServiceFactory<FrameworkStatus> fs = new RemoteOSGiFrameworkFactoryService(context, monitorAdminServiceTracker);
+        reg = context.registerService(RemoteServiceFactory.class.getName(), fs, props);
 
         ServiceTracker frameworkStatusAdditionServiceTracker = new ServiceTracker(context, FrameworkStatusAddition.class.getName(), null) {
             @Override

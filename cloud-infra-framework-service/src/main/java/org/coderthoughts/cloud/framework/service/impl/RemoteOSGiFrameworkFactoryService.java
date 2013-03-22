@@ -1,5 +1,7 @@
 package org.coderthoughts.cloud.framework.service.impl;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -22,7 +24,7 @@ public class RemoteOSGiFrameworkFactoryService implements RemoteServiceFactory<F
     }
 
     @Override
-    public FrameworkStatus getService(ClientInfo client, ServiceReference reference) {
+    public FrameworkStatus getService(ClientInfo client, ServiceReference reference, Method method, Object[] args) {
         System.out.println("*** Called getService: " + client + "#" + reference);
 
         // I guess the following would do fine too. We don't need PrototypeServiceFactories here...
@@ -32,6 +34,8 @@ public class RemoteOSGiFrameworkFactoryService implements RemoteServiceFactory<F
     }
 
     @Override
-    public void ungetService(ClientInfo client, ServiceReference reference, FrameworkStatus service) {
+    public void ungetService(ClientInfo client, ServiceReference reference, FrameworkStatus service, Method method, Object[] args) {
+        System.out.println("*** Finished with the invocation of " + method + " with args " + Arrays.toString(args));
+        // TODO clean out old services when things get too full.
     }
 }
