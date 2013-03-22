@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.cxf.dosgi.dsw.RemoteServiceFactory;
+import org.coderthoughts.cloud.framework.service.api.CloudConstants;
 import org.coderthoughts.cloud.framework.service.api.FrameworkStatus;
 import org.coderthoughts.cloud.framework.service.api.FrameworkStatusAddition;
 import org.osgi.framework.BundleActivator;
@@ -55,7 +56,7 @@ public class Activator implements BundleActivator {
         props.put("java.vm.version", System.getProperty("java.vm.version"));
         props.put("java.vm.name", System.getProperty("java.vm.name"));
         props.put("service.exported.interfaces", "*");
-        props.put("service.exported.configs", new String [] {"org.coderthoughts.configtype.cloud", "<<nodefault>>"});
+        props.put("service.exported.configs", new String [] {CloudConstants.CLOUD_CONFIGURATION_TYPE, "<<nodefault>>"});
         props.put("service.exported.type", FrameworkStatus.class);
 
         /*
