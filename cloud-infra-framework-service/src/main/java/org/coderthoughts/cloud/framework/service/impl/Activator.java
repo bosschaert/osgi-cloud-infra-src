@@ -1,7 +1,10 @@
 package org.coderthoughts.cloud.framework.service.impl;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.UUID;
 
 import org.coderthoughts.cloud.framework.service.api.FrameworkStatus;
@@ -69,16 +72,15 @@ public class Activator implements BundleActivator {
         ServiceTracker frameworkStatusAdditionServiceTracker = new ServiceTracker(context, FrameworkStatusAddition.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                Object svc = super.addingService(reference);
-                if (svc instanceof FrameworkStatusAddition) {
-                    FrameworkStatusAddition fsa = (FrameworkStatusAddition) svc;
-                    Dictionary<String, Object> dict = getCurProperties(reg);
-                    for (String key : fsa.getAdditionalPropertyKeys()) {
-                        dict.put(key, fsa.getAdditionalProperty(key));
+                Dictionary<String, Object> dict = getCurProperties(reg);
+                List<String> dictKeys = Collections.list(dict.keys());
+                for (String key : getStringPlusProperty(reference.getProperty(FrameworkStatusAddition.ADD_PROPERTIES_KEY))) {
+                    if (!dictKeys.contains(key)) {
+                        dict.put(key, reference.getProperty(key));
                     }
-                    reg.setProperties(dict);
                 }
-                return svc;
+                reg.setProperties(dict);
+                return super.addingService(reference);
             }
         };
         frameworkStatusAdditionServiceTracker.open();
@@ -87,7 +89,7 @@ public class Activator implements BundleActivator {
 //        context.registerService(FrameworkMetadataPublisher.class.getName(), publisher, null);
     }
 
-    private Dictionary<String, Object> getCurProperties(ServiceRegistration reg) {
+    private static Dictionary<String, Object> getCurProperties(ServiceRegistration reg) {
         Dictionary<String, Object> dict = new Hashtable<String, Object>();
 
         for (String key : reg.getReference().getPropertyKeys()) {
@@ -96,6 +98,24 @@ public class Activator implements BundleActivator {
 
         return dict;
     }
+
+    private static String[] getStringPlusProperty(Object property) {
+        if (property instanceof String) {
+            return new String[] {(String) property};
+        }
+
+        if (property instanceof String[]) {
+            return (String[]) property;
+        }
+
+        if (property instanceof Collection<?>) {
+            Collection<?> col = (Collection<?>) property;
+            return col.toArray(new String[] {});
+        }
+
+        return new String[0];
+    }
+
 
     @Override
     public void stop(BundleContext context) throws Exception {
