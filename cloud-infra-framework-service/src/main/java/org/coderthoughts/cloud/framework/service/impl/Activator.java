@@ -1,5 +1,6 @@
 package org.coderthoughts.cloud.framework.service.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -11,18 +12,17 @@ import org.apache.cxf.dosgi.dsw.RemoteServiceFactory;
 import org.coderthoughts.cloud.framework.service.api.CloudConstants;
 import org.coderthoughts.cloud.framework.service.api.FrameworkStatus;
 import org.coderthoughts.cloud.framework.service.api.FrameworkStatusAddition;
+import org.coderthoughts.cloud.framework.service.impl.RemoteOSGiFrameworkFactoryService.Tuple;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.monitor.MonitorAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator {
     private static final String OSGI_FRAMEWORK_UUID = "org.osgi.framework.uuid";
-    private ServiceTracker monitorAdminServiceTracker, frameworkStatusAdditionServiceTracker;
-    private ServiceRegistration reg;
+    private ServiceTracker frameworkStatusAdditionServiceTracker;
 
     @Override
     public void start(BundleContext context) throws Exception {
@@ -36,9 +36,6 @@ public class Activator implements BundleActivator {
             uuid = UUID.randomUUID().toString();
             System.setProperty(OSGI_FRAMEWORK_UUID, uuid);
         }
-
-        monitorAdminServiceTracker = new ServiceTracker(context, MonitorAdmin.class.getName(), null);
-        monitorAdminServiceTracker.open();
 
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put(OSGI_FRAMEWORK_UUID, uuid);
@@ -59,18 +56,10 @@ public class Activator implements BundleActivator {
         props.put("service.exported.configs", new String [] {CloudConstants.CLOUD_CONFIGURATION_TYPE, "<<nodefault>>"});
         props.put("service.exported.type", FrameworkStatus.class);
 
-        /*
-        RemoteServiceFactory svcFactory = new OSGiFrameworkServiceFactory(monitorAdminServiceTracker);
-        props.put("org.coderthoughts.remote.service.factory", svcFactory);
-        OSGiFramework fwkService = new OSGiFrameworkImpl("localhost", monitorAdminServiceTracker);
-        reg = context.registerService(OSGiFramework.class.getName(), fwkService, props);
-        */
+        final RemoteOSGiFrameworkFactoryService fs = new RemoteOSGiFrameworkFactoryService(context);
+        final ServiceRegistration reg = context.registerService(RemoteServiceFactory.class.getName(), fs, props);
 
-//        // context.registerService(OSGiFramework.class.getName(), service, properties)
-        RemoteServiceFactory<FrameworkStatus> fs = new RemoteOSGiFrameworkFactoryService(context, monitorAdminServiceTracker);
-        reg = context.registerService(RemoteServiceFactory.class.getName(), fs, props);
-
-        ServiceTracker frameworkStatusAdditionServiceTracker = new ServiceTracker(context, FrameworkStatusAddition.class.getName(), null) {
+        frameworkStatusAdditionServiceTracker = new ServiceTracker(context, FrameworkStatusAddition.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
                 Dictionary<String, Object> dict = getCurProperties(reg);
@@ -80,14 +69,43 @@ public class Activator implements BundleActivator {
                         dict.put(key, reference.getProperty(key));
                     }
                 }
+
+                for (String key : getStringPlusProperty(reference.getProperty(FrameworkStatusAddition.ADD_VARIABLES_KEY))) {
+                    fs.getFrameworkVariables().put(key, reference);
+                }
+
+                for (String key: getStringPlusProperty(reference.getProperty(FrameworkStatusAddition.SERVICE_VARIABLES_KEY))) {
+                    String[] serviceIDs = getStringPlusProperty(reference.getProperty(FrameworkStatusAddition.SERVICE_IDS_KEY));
+                    if (serviceIDs.length == 0)
+                        continue;
+
+                    List<Long> ids = new ArrayList<Long>();
+                    for (String id : serviceIDs) {
+                        try {
+                            Long l = new Long(id);
+                            ids.add(l);
+                        } catch (NumberFormatException nfe) {
+                        }
+                    }
+                    fs.getServiceVariables().put(new Tuple(key, ids), reference);
+                }
                 reg.setProperties(dict);
                 return super.addingService(reference);
             }
+
+            @Override
+            public void modifiedService(ServiceReference reference, Object service) {
+                // TODO Auto-generated method stub
+                super.modifiedService(reference, service);
+            }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                // TODO Auto-generated method stub
+                super.removedService(reference, service);
+            }
         };
         frameworkStatusAdditionServiceTracker.open();
-
-//        FrameworkMetadataPublisher publisher = new FrameworkMetadataPublisherImpl(reg);
-//        context.registerService(FrameworkMetadataPublisher.class.getName(), publisher, null);
     }
 
     private static Dictionary<String, Object> getCurProperties(ServiceRegistration reg) {
@@ -120,8 +138,6 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        // reg.unregister();
-        monitorAdminServiceTracker.close();
         frameworkStatusAdditionServiceTracker.close();
     }
 }
