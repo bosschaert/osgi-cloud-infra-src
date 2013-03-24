@@ -58,11 +58,14 @@ public class FrameworkStatusImpl implements FrameworkStatus {
         try {
             ServiceReference[] additionRefs =
                     bundleContext.getServiceReferences(FrameworkStatusAddition.class.getName(),
-                    "(&(service.variables=" + name + ")(service.ids=" + serviceID + ")");
-            sortServiceReferences(additionRefs);
-            for (ServiceReference ref : additionRefs) {
-                FrameworkStatusAddition addition = (FrameworkStatusAddition) bundleContext.getService(ref);
-                return addition.getServiceVariable(serviceID, name, client);
+                    "(&(" + FrameworkStatusAddition.SERVICE_VARIABLES_KEY + "=" + name + ")" +
+            		"(" + FrameworkStatusAddition.SERVICE_IDS_KEY + "=" + serviceID + "))");
+            if (additionRefs != null) {
+                sortServiceReferences(additionRefs);
+                for (ServiceReference ref : additionRefs) {
+                    FrameworkStatusAddition addition = (FrameworkStatusAddition) bundleContext.getService(ref);
+                    return addition.getServiceVariable(serviceID, name, client);
+                }
             }
             return FrameworkStatus.SERVICE_STATUS_NOT_FOUND;
         } catch (InvalidSyntaxException e) {
