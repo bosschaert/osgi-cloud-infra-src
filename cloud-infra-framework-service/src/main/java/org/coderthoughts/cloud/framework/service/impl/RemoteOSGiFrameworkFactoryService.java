@@ -35,8 +35,8 @@ public class RemoteOSGiFrameworkFactoryService implements RemoteServiceFactory<F
     }
 
     @Override
-    public void ungetService(ClientInfo client, ServiceReference reference, FrameworkStatus service, Method method, Object[] args) {
-        System.out.println("*** Finished with the invocation of " + method + " with args " + Arrays.toString(args));
+    public void ungetService(ClientInfo client, ServiceReference reference, FrameworkStatus service, Method method, Object[] args, Object rv) {
+        System.out.println("*** Finished with the invocation of " + method + " with args " + Arrays.toString(args) + ". Return value: " + rv);
         // TODO clean out old services when things get too full.
     }
 
