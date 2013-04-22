@@ -1,33 +1,56 @@
 package org.coderthoughts.cloud.framework.service.impl;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.cxf.dosgi.dsw.ClientInfo;
+import org.coderthoughts.cloud.framework.service.api.FrameworkNodeAddition;
 import org.coderthoughts.cloud.framework.service.api.FrameworkNodeStatus;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 
-public class FrameworkNodeStatusImpl implements FrameworkNodeStatus {
-    private final RemoteOSGiFrameworkFactoryService frameworkService;
+class FrameworkNodeStatusImpl implements FrameworkNodeStatus {
     private final ClientInfo client;
     private final BundleContext bundleContext;
 
-    public FrameworkNodeStatusImpl(RemoteOSGiFrameworkFactoryService fs, ClientInfo client, BundleContext bc) {
-        this.frameworkService = fs;
+    public FrameworkNodeStatusImpl(ClientInfo client, BundleContext bc) {
         this.client = client;
         this.bundleContext = bc;
     }
 
     @Override
     public String[] listFrameworkVariableNames() {
-        return frameworkService.getFrameworkVariables().keySet().toArray(new String[] {});
+        try {
+            Set<String> names = new HashSet<String>();
+            ServiceReference[] refs = bundleContext.getServiceReferences(FrameworkNodeAddition.class.getName(), null);
+            if (refs != null) {
+                for (ServiceReference ref : refs) {
+                    names.addAll(Activator.getStringPlusProperty(ref.getProperty(FrameworkNodeAddition.ADD_VARIABLES_KEY)));
+                }
+            }
+            return names.toArray(new String [] {});
+        } catch (InvalidSyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        // return frameworkService.getFrameworkVariables().keySet().toArray(new String[] {});
     }
 
     @Override
     public String getFrameworkVariable(String name) {
-        System.out.println("*** Obtaining framework variable: " + name + " requester IP:" + client);
-        if (FV_AVAILABLE_MEMORY.equals(name)) {
-            return "" + Runtime.getRuntime().freeMemory();
+        try {
+            ServiceReference[] refs = bundleContext.getServiceReferences(FrameworkNodeAddition.class.getName(),
+                    "(" + FrameworkNodeAddition.ADD_VARIABLES_KEY + "=" + name + ")");
+            if (refs != null && refs.length > 0) {
+                Object svc = bundleContext.getService(refs[0]);
+                if (svc instanceof FrameworkNodeAddition) {
+                    return ((FrameworkNodeAddition) svc).getFrameworkVariable(name, client);
+                }
+            }
+        } catch (InvalidSyntaxException e) {
+            throw new RuntimeException(e);
         }
         throw new IllegalArgumentException(name);
     }
@@ -35,12 +58,35 @@ public class FrameworkNodeStatusImpl implements FrameworkNodeStatus {
     @Override
     public Map<String, String> getFrameworkVariables(String... filters) {
         Map<String, String> m = new HashMap<String, String>();
+        try {
+            ServiceReference[] refs = bundleContext.getServiceReferences(FrameworkNodeAddition.class.getName(), null);
+            if (refs == null)
+                return m;
+
+            for (ServiceReference ref : refs) {
+                for (String var : Activator.getStringPlusProperty(ref.getProperty(FrameworkNodeAddition.ADD_VARIABLES_KEY))) {
+                    for (String filter : filters) {
+                        if (var.matches(filter)) {
+                            try {
+                                m.put(var, ((FrameworkNodeAddition) bundleContext.getService(ref)).getFrameworkVariable(var, client));
+                            } catch (Throwable th) {
+                                m.put(var, th.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (InvalidSyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
+        /*
         for (String filter : filters) {
             // we only have one variable right now...
             if (FV_AVAILABLE_MEMORY.matches(filter)) {
                 m.put(FV_AVAILABLE_MEMORY, "" + Runtime.getRuntime().freeMemory());
             }
-        }
+        } */
         return m;
     }
 

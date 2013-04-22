@@ -2,8 +2,6 @@ package org.coderthoughts.cloud.framework.service.impl;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -16,8 +14,8 @@ import org.osgi.framework.ServiceReference;
 
 public class RemoteOSGiFrameworkFactoryService implements RemoteServiceFactory<FrameworkNodeStatus> {
     private final BundleContext bundleContext;
-    private final ConcurrentMap<String, ServiceReference> variables = new ConcurrentHashMap<String, ServiceReference>();
-    private final ConcurrentMap<Tuple, ServiceReference> serviceVariables = new ConcurrentHashMap<Tuple, ServiceReference>();
+//    private final ConcurrentMap<String, ServiceReference> variables = new ConcurrentHashMap<String, ServiceReference>();
+//    private final ConcurrentMap<Tuple, ServiceReference> serviceVariables = new ConcurrentHashMap<Tuple, ServiceReference>();
     private final ConcurrentMap<Object, FrameworkNodeStatusImpl> services = new ConcurrentHashMap<Object, FrameworkNodeStatusImpl>();
 
     public RemoteOSGiFrameworkFactoryService(BundleContext ctx) {
@@ -29,7 +27,7 @@ public class RemoteOSGiFrameworkFactoryService implements RemoteServiceFactory<F
         System.out.println("*** Called getService: " + client + "#" + reference);
 
         // I guess the following would do fine too. We don't need PrototypeServiceFactories here...
-        FrameworkNodeStatusImpl newSvc = new FrameworkNodeStatusImpl(this, client, bundleContext);
+        FrameworkNodeStatusImpl newSvc = new FrameworkNodeStatusImpl(client, bundleContext);
         FrameworkNodeStatusImpl oldSvc = services.putIfAbsent(client, newSvc);
         return oldSvc == null ? newSvc : oldSvc;
     }
@@ -40,6 +38,7 @@ public class RemoteOSGiFrameworkFactoryService implements RemoteServiceFactory<F
         // TODO clean out old services when things get too full.
     }
 
+    /*
     Map<String, ServiceReference> getFrameworkVariables() {
         return variables;
     }
@@ -57,4 +56,5 @@ public class RemoteOSGiFrameworkFactoryService implements RemoteServiceFactory<F
             serviceIDs = ids;
         }
     }
+    */
 }

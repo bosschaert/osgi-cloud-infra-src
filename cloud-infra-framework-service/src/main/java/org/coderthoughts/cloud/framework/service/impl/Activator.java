@@ -1,6 +1,6 @@
 package org.coderthoughts.cloud.framework.service.impl;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -10,9 +10,8 @@ import java.util.UUID;
 
 import org.apache.cxf.dosgi.dsw.RemoteServiceFactory;
 import org.coderthoughts.cloud.framework.service.api.CloudConstants;
+import org.coderthoughts.cloud.framework.service.api.FrameworkNodeAddition;
 import org.coderthoughts.cloud.framework.service.api.FrameworkNodeStatus;
-import org.coderthoughts.cloud.framework.service.api.FrameworkStatusAddition;
-import org.coderthoughts.cloud.framework.service.impl.RemoteOSGiFrameworkFactoryService.Tuple;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -64,40 +63,17 @@ public class Activator implements BundleActivator {
 
         // TODO is this really what we want, how about updates to its properties?
         final ServiceRegistration localReg = context.registerService(FrameworkNodeStatus.class.getName(),
-                new FrameworkNodeStatusImpl(fs, new LocalClientInfo(context), context), props);
+                new FrameworkNodeStatusImpl(new LocalClientInfo(context), context), props);
 
+        Hashtable<String, String> fnaProps = new Hashtable<String, String>();
+        fnaProps.put(FrameworkNodeAddition.ADD_VARIABLES_KEY, FrameworkNodeStatus.FV_AVAILABLE_MEMORY);
+        context.registerService(FrameworkNodeAddition.class.getName(), new FrameworkNodeAdditionImpl(), fnaProps);
 
-        frameworkStatusAdditionServiceTracker = new ServiceTracker(context, FrameworkStatusAddition.class.getName(), null) {
+        frameworkStatusAdditionServiceTracker = new ServiceTracker(context, FrameworkNodeAddition.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                Dictionary<String, Object> dict = getCurProperties(remReg);
-                List<String> dictKeys = Collections.list(dict.keys());
-                for (String key : getStringPlusProperty(reference.getProperty(FrameworkStatusAddition.ADD_PROPERTIES_KEY))) {
-                    if (!dictKeys.contains(key)) {
-                        dict.put(key, reference.getProperty(key));
-                    }
-                }
-
-                for (String key : getStringPlusProperty(reference.getProperty(FrameworkStatusAddition.ADD_VARIABLES_KEY))) {
-                    fs.getFrameworkVariables().put(key, reference);
-                }
-
-                for (String key: getStringPlusProperty(reference.getProperty(FrameworkStatusAddition.SERVICE_VARIABLES_KEY))) {
-                    String[] serviceIDs = getStringPlusProperty(reference.getProperty(FrameworkStatusAddition.SERVICE_IDS_KEY));
-                    if (serviceIDs.length == 0)
-                        continue;
-
-                    List<Long> ids = new ArrayList<Long>();
-                    for (String id : serviceIDs) {
-                        try {
-                            Long l = new Long(id);
-                            ids.add(l);
-                        } catch (NumberFormatException nfe) {
-                        }
-                    }
-                    fs.getServiceVariables().put(new Tuple(key, ids), reference);
-                }
-                remReg.setProperties(dict);
+                addStatusProperties(remReg, reference);
+                addStatusProperties(localReg, reference);
                 return super.addingService(reference);
             }
 
@@ -126,26 +102,38 @@ public class Activator implements BundleActivator {
         return dict;
     }
 
-    private static String[] getStringPlusProperty(Object property) {
+    @SuppressWarnings("unchecked")
+    static Collection<String> getStringPlusProperty(Object property) {
         if (property instanceof String) {
-            return new String[] {(String) property};
+            return Collections.singleton((String) property);
         }
 
         if (property instanceof String[]) {
-            return (String[]) property;
+            return Arrays.asList((String[]) property);
         }
 
         if (property instanceof Collection<?>) {
-            Collection<?> col = (Collection<?>) property;
-            return col.toArray(new String[] {});
+            return (Collection<String>) property;
         }
 
-        return new String[0];
+        return Collections.emptyList();
     }
 
 
     @Override
     public void stop(BundleContext context) throws Exception {
         frameworkStatusAdditionServiceTracker.close();
+    }
+
+    private void addStatusProperties(final ServiceRegistration sreg, ServiceReference reference) {
+        Dictionary<String, Object> dict = getCurProperties(sreg);
+        List<String> dictKeys = Collections.list(dict.keys());
+        for (String key : getStringPlusProperty(reference.getProperty(FrameworkNodeAddition.ADD_PROPERTIES_KEY))) {
+            if (!dictKeys.contains(key)) {
+                dict.put(key, reference.getProperty(key));
+            }
+        }
+
+        sreg.setProperties(dict);
     }
 }
