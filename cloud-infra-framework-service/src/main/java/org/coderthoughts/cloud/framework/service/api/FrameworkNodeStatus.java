@@ -1,6 +1,8 @@
 package org.coderthoughts.cloud.framework.service.api;
 
-public interface FrameworkStatus {
+import java.util.Map;
+
+public interface FrameworkNodeStatus {
     // Service Registration property keys
     static final String SERVICE_VARIABLES_KEY = "org.osgi.service.variables";
     static final String FRAMEWORK_VARIABLES_KEY = "org.osgi.framework.variables";
@@ -44,19 +46,5 @@ public interface FrameworkStatus {
      */
     String getFrameworkVariable(String name);
 
-    /**
-     * Returns the list of service variable names for the given service.
-     * @param id The local service ID for the service.
-     * @return The list of available service variables for the specified service.
-     */
-    String[] listServiceVariableNames(long id);
-
-    /**
-     * Obtain a service variable value.
-     * @param serviceID The local service ID. For remote services this can be found in the
-     * {@code endpoint.service.id} property of the service reference.
-     * @param name The service variable name.
-     * @return The value of the service variable.
-     */
-    String getServiceVariable(long serviceID, String name);
+    Map<String, String> getFrameworkVariables(String ... filters);
 }

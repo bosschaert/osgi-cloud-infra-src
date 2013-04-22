@@ -10,7 +10,7 @@ import java.util.UUID;
 
 import org.apache.cxf.dosgi.dsw.RemoteServiceFactory;
 import org.coderthoughts.cloud.framework.service.api.CloudConstants;
-import org.coderthoughts.cloud.framework.service.api.FrameworkStatus;
+import org.coderthoughts.cloud.framework.service.api.FrameworkNodeStatus;
 import org.coderthoughts.cloud.framework.service.api.FrameworkStatusAddition;
 import org.coderthoughts.cloud.framework.service.impl.RemoteOSGiFrameworkFactoryService.Tuple;
 import org.osgi.framework.BundleActivator;
@@ -42,7 +42,8 @@ public class Activator implements BundleActivator {
         props.put("org.coderthoughts.framework.ip", publicDNS);
         props.put("org.coderthoughts.cloud.name", "Red Hat Openshift/DIY/OSGi"); // TODO obtain from underlying cloud
         props.put("org.coderthoughts.cloud.version", "0.9"); // TODO obtain from underlying cloud
-        props.put("org.coderthoughts.cloud.location", "USA"); // TODO obtain from underlying platform
+        props.put("org.coderthoughts.cloud.country", "USA"); // TODO obtain from underlying platform
+        props.put("org.coderthoughts.cloud.location", "US-KS"); // TODO obtain from underlying platform
         props.put(Constants.FRAMEWORK_VERSION, context.getProperty(Constants.FRAMEWORK_VERSION));
         props.put(Constants.FRAMEWORK_PROCESSOR, context.getProperty(Constants.FRAMEWORK_PROCESSOR));
         props.put(Constants.FRAMEWORK_OS_NAME, context.getProperty(Constants.FRAMEWORK_OS_NAME));
@@ -52,17 +53,24 @@ public class Activator implements BundleActivator {
         props.put("java.vm.vendor", System.getProperty("java.vm.vendor"));
         props.put("java.vm.version", System.getProperty("java.vm.version"));
         props.put("java.vm.name", System.getProperty("java.vm.name"));
-        props.put("service.exported.interfaces", "*");
-        props.put("service.exported.configs", new String [] {CloudConstants.CLOUD_CONFIGURATION_TYPE, "<<nodefault>>"});
-        props.put("service.exported.type", FrameworkStatus.class);
+
+        Hashtable<String, Object> remProps = new Hashtable<String, Object>(props);
+        remProps.put("service.exported.interfaces", "*");
+        remProps.put("service.exported.configs", new String [] {CloudConstants.CLOUD_CONFIGURATION_TYPE, "<<nodefault>>"});
+        remProps.put("service.exported.type", FrameworkNodeStatus.class);
 
         final RemoteOSGiFrameworkFactoryService fs = new RemoteOSGiFrameworkFactoryService(context);
-        final ServiceRegistration reg = context.registerService(RemoteServiceFactory.class.getName(), fs, props);
+        final ServiceRegistration remReg = context.registerService(RemoteServiceFactory.class.getName(), fs, remProps);
+
+        // TODO is this really what we want, how about updates to its properties?
+        final ServiceRegistration localReg = context.registerService(FrameworkNodeStatus.class.getName(),
+                new FrameworkNodeStatusImpl(fs, new LocalClientInfo(context), context), props);
+
 
         frameworkStatusAdditionServiceTracker = new ServiceTracker(context, FrameworkStatusAddition.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                Dictionary<String, Object> dict = getCurProperties(reg);
+                Dictionary<String, Object> dict = getCurProperties(remReg);
                 List<String> dictKeys = Collections.list(dict.keys());
                 for (String key : getStringPlusProperty(reference.getProperty(FrameworkStatusAddition.ADD_PROPERTIES_KEY))) {
                     if (!dictKeys.contains(key)) {
@@ -89,7 +97,7 @@ public class Activator implements BundleActivator {
                     }
                     fs.getServiceVariables().put(new Tuple(key, ids), reference);
                 }
-                reg.setProperties(dict);
+                remReg.setProperties(dict);
                 return super.addingService(reference);
             }
 

@@ -1,25 +1,18 @@
 package org.coderthoughts.cloud.framework.service.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.cxf.dosgi.dsw.ClientInfo;
-import org.coderthoughts.cloud.framework.service.api.FrameworkStatus;
-import org.coderthoughts.cloud.framework.service.api.FrameworkStatusAddition;
-import org.coderthoughts.cloud.framework.service.impl.RemoteOSGiFrameworkFactoryService.Tuple;
+import org.coderthoughts.cloud.framework.service.api.FrameworkNodeStatus;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 
-public class FrameworkStatusImpl implements FrameworkStatus {
+public class FrameworkNodeStatusImpl implements FrameworkNodeStatus {
     private final RemoteOSGiFrameworkFactoryService frameworkService;
     private final ClientInfo client;
     private final BundleContext bundleContext;
 
-    public FrameworkStatusImpl(RemoteOSGiFrameworkFactoryService fs, ClientInfo client, BundleContext bc) {
+    public FrameworkNodeStatusImpl(RemoteOSGiFrameworkFactoryService fs, ClientInfo client, BundleContext bc) {
         this.frameworkService = fs;
         this.client = client;
         this.bundleContext = bc;
@@ -31,6 +24,28 @@ public class FrameworkStatusImpl implements FrameworkStatus {
     }
 
     @Override
+    public String getFrameworkVariable(String name) {
+        System.out.println("*** Obtaining framework variable: " + name + " requester IP:" + client);
+        if (FV_AVAILABLE_MEMORY.equals(name)) {
+            return "" + Runtime.getRuntime().freeMemory();
+        }
+        throw new IllegalArgumentException(name);
+    }
+
+    @Override
+    public Map<String, String> getFrameworkVariables(String... filters) {
+        Map<String, String> m = new HashMap<String, String>();
+        for (String filter : filters) {
+            // we only have one variable right now...
+            if (FV_AVAILABLE_MEMORY.matches(filter)) {
+                m.put(FV_AVAILABLE_MEMORY, "" + Runtime.getRuntime().freeMemory());
+            }
+        }
+        return m;
+    }
+
+    /*
+    @Override
     public String[] listServiceVariableNames(long id) {
         List<String> names = new ArrayList<String>();
         for (Tuple t : frameworkService.getServiceVariables().keySet()) {
@@ -40,16 +55,6 @@ public class FrameworkStatusImpl implements FrameworkStatus {
         }
         return names.toArray(new String[] {});
     }
-
-    @Override
-    public String getFrameworkVariable(String name) {
-        System.out.println("*** Obtaining framework variable: " + name + " requester IP:" + client);
-        if (FV_AVAILABLE_MEMORY.equals(name)) {
-            return "" + Runtime.getRuntime().freeMemory();
-        }
-        throw new IllegalArgumentException(name);
-    }
-
 
     @Override
     public String getServiceVariable(long serviceID, String name) {
@@ -67,7 +72,7 @@ public class FrameworkStatusImpl implements FrameworkStatus {
                     return addition.getServiceVariable(serviceID, name, client);
                 }
             }
-            return FrameworkStatus.SERVICE_STATUS_NOT_FOUND;
+            return FrameworkNodeStatus.SERVICE_STATUS_NOT_FOUND;
         } catch (InvalidSyntaxException e) {
             throw new RuntimeException(e);
         }
@@ -96,4 +101,5 @@ public class FrameworkStatusImpl implements FrameworkStatus {
             }
         });
     }
+    */
 }
