@@ -8,7 +8,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.cxf.dosgi.dsw.RemoteServiceFactory;
 import org.coderthoughts.cloud.framework.service.api.CloudConstants;
 import org.coderthoughts.cloud.framework.service.api.FrameworkNodeAddition;
 import org.coderthoughts.cloud.framework.service.api.FrameworkNodeStatus;
@@ -52,18 +51,21 @@ public class Activator implements BundleActivator {
         props.put("java.vm.vendor", System.getProperty("java.vm.vendor"));
         props.put("java.vm.version", System.getProperty("java.vm.version"));
         props.put("java.vm.name", System.getProperty("java.vm.name"));
+        props.put("service.exported.interfaces", "*");
+        props.put("service.exported.configs", new String [] {CloudConstants.CLOUD_CONFIGURATION_TYPE, "<<nodefault>>"});
+        // props.put("service.exported.type", FrameworkNodeStatus.class);
+        props.put("service.exported.handler", new RemoteOSGiFrameworkServiceInvocationHandler(context));
 
-        Hashtable<String, Object> remProps = new Hashtable<String, Object>(props);
-        remProps.put("service.exported.interfaces", "*");
-        remProps.put("service.exported.configs", new String [] {CloudConstants.CLOUD_CONFIGURATION_TYPE, "<<nodefault>>"});
-        remProps.put("service.exported.type", FrameworkNodeStatus.class);
-
+        final ServiceRegistration reg = context.registerService(FrameworkNodeStatus.class.getName(),
+                new FrameworkNodeStatusImpl(new LocalClientInfo(context), context), props);
+        /*
         final RemoteOSGiFrameworkFactoryService fs = new RemoteOSGiFrameworkFactoryService(context);
-        final ServiceRegistration remReg = context.registerService(RemoteServiceFactory.class.getName(), fs, remProps);
+        final ServiceRegistration remReg = context.registerService(RemoteServiceFactory.class.getName(), fs, props);
 
         // TODO is this really what we want, how about updates to its properties?
         final ServiceRegistration localReg = context.registerService(FrameworkNodeStatus.class.getName(),
                 new FrameworkNodeStatusImpl(new LocalClientInfo(context), context), props);
+        */
 
         Hashtable<String, String> fnaProps = new Hashtable<String, String>();
         fnaProps.put(FrameworkNodeAddition.ADD_VARIABLES_KEY, FrameworkNodeStatus.FV_AVAILABLE_MEMORY);
@@ -72,8 +74,9 @@ public class Activator implements BundleActivator {
         frameworkStatusAdditionServiceTracker = new ServiceTracker(context, FrameworkNodeAddition.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                addStatusProperties(remReg, reference);
-                addStatusProperties(localReg, reference);
+                addStatusProperties(reg, reference);
+//                addStatusProperties(remReg, reference);
+//                addStatusProperties(localReg, reference);
                 return super.addingService(reference);
             }
 
