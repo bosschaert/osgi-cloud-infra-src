@@ -46,5 +46,12 @@ public interface FrameworkNodeStatus {
      */
     String getFrameworkVariable(String name);
 
+    /**
+     * Obtain a number of framework variable names using regular expression pattern matching.
+     *
+     * @param filters The filters to match. Every filter is matched against all known variables.
+     * @return A map representing all matching variables. The key is the variable name and the value
+     * is the variable value.
+     */
     Map<String, String> getFrameworkVariables(String ... filters);
 }
