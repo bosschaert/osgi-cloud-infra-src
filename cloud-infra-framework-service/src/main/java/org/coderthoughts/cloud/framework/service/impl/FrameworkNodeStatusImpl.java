@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.cxf.dosgi.dsw.ClientInfo;
+import org.apache.cxf.dosgi.dsw.ClientContext;
 import org.coderthoughts.cloud.framework.service.api.FrameworkNodeAddition;
 import org.coderthoughts.cloud.framework.service.api.FrameworkNodeStatus;
 import org.osgi.framework.BundleContext;
@@ -13,10 +13,10 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
 class FrameworkNodeStatusImpl implements FrameworkNodeStatus {
-    private final ClientInfo client;
+    private final ClientContext client;
     private final BundleContext bundleContext;
 
-    public FrameworkNodeStatusImpl(ClientInfo client, BundleContext bc) {
+    public FrameworkNodeStatusImpl(ClientContext client, BundleContext bc) {
         this.client = client;
         this.bundleContext = bc;
     }

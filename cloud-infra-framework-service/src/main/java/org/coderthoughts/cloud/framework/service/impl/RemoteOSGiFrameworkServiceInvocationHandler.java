@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.cxf.dosgi.dsw.ClientInfo;
+import org.apache.cxf.dosgi.dsw.ClientContext;
 import org.apache.cxf.dosgi.dsw.RemoteServiceInvocationHandler;
 import org.coderthoughts.cloud.framework.service.api.FrameworkNodeStatus;
 import org.osgi.framework.BundleContext;
@@ -23,7 +23,7 @@ public class RemoteOSGiFrameworkServiceInvocationHandler implements RemoteServic
     }
 
     @Override
-    public Object invoke(ClientInfo client, ServiceReference reference, Method method, Object[] args) {
+    public Object invoke(ClientContext client, ServiceReference reference, Method method, Object[] args) {
         System.out.println("*** Called invoke: " + client + "#" + reference + "#" + method + "#" + Arrays.toString(args));
 
         // I guess the following would do fine too. We don't need PrototypeServiceFactories here...
@@ -35,16 +35,6 @@ public class RemoteOSGiFrameworkServiceInvocationHandler implements RemoteServic
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    @Override
-    public String[] listServiceVariablesNames(ClientInfo client) {
-        return new String [] {};
-    }
-
-    @Override
-    public String getServiceVariable(ClientInfo client, String name) {
-        return null;
     }
 
     /*

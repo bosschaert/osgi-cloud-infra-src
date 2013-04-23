@@ -112,6 +112,7 @@ public class Activator implements BundleActivator {
         if (registrations.containsKey(serviceID))
             return;
 
+        /* */ System.out.println("### Handling cloud config type for: " + sr);
         Map<String, Object> props = new HashMap<String, Object>();
         props.put("service.exported.configs", "org.apache.cxf.ws");
         props.put("org.apache.cxf.ws.httpservice.context", "/" + serviceID);

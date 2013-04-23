@@ -2,10 +2,10 @@ package org.coderthoughts.cloud.framework.service.impl;
 
 import java.security.Principal;
 
-import org.apache.cxf.dosgi.dsw.ClientInfo;
+import org.apache.cxf.dosgi.dsw.ClientContext;
 import org.osgi.framework.BundleContext;
 
-public class LocalClientInfo implements ClientInfo {
+public class LocalClientInfo implements ClientContext {
     private BundleContext bundleContext;
 
     public LocalClientInfo(BundleContext ctx) {
