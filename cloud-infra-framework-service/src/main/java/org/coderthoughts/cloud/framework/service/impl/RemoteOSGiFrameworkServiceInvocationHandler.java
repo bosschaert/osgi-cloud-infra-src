@@ -37,6 +37,16 @@ public class RemoteOSGiFrameworkServiceInvocationHandler implements RemoteServic
         }
     }
 
+    @Override
+    public String[] listServiceVariablesNames(ClientInfo client) {
+        return new String [] {};
+    }
+
+    @Override
+    public String getServiceVariable(ClientInfo client, String name) {
+        return null;
+    }
+
     /*
     @Override
     public FrameworkNodeStatus getService(ClientInfo client, ServiceReference reference, Method method, Object[] args) {
