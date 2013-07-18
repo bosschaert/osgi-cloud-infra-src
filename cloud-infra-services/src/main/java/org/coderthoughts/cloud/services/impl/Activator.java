@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.coderthoughts.cloud.framework.service.api.CloudConstants;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -65,7 +66,7 @@ public class Activator implements BundleActivator {
         endpointListenerServiceTracker.open();
 
         Filter filter = context.createFilter(
-                "(&(service.exported.interfaces=*)(service.exported.configs=org.coderthoughts.configtype.cloud))");
+                "(&(service.exported.interfaces=*)(service.exported.configs=" + CloudConstants.CLOUD_CONFIGURATION_TYPE + "))");
         cloudServiceTracker = new ServiceTracker(context, filter, null) {
             @Override
             public Object addingService(ServiceReference reference) {

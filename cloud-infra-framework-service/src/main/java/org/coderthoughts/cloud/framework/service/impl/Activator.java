@@ -35,13 +35,6 @@ public class Activator implements BundleActivator {
             System.setProperty(OSGI_FRAMEWORK_UUID, uuid);
         }
 
-        /*
-        String [] gearTypeParts = System.getenv("OPENSHIFT_GEAR_TYPE").split("[-]");
-        if (gearTypeParts.length != 2) {
-            throw new Exception("Environment variable OPENSHIFT_GEAR_TYPE does not follow the syntax 'type-version'");
-        }
-        */
-
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put(OSGI_FRAMEWORK_UUID, uuid);
         props.put("org.osgi.node.host", publicDNS);
