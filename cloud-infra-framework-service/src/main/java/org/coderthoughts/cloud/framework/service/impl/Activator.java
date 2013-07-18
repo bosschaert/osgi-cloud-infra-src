@@ -35,13 +35,19 @@ public class Activator implements BundleActivator {
             System.setProperty(OSGI_FRAMEWORK_UUID, uuid);
         }
 
+        String [] gearTypeParts = System.getenv("OPENSHIFT_GEAR_TYPE").split("[-]");
+        if (gearTypeParts.length != 2) {
+            throw new Exception("Environment variable OPENSHIFT_GEAR_TYPE does not follow the syntax 'type-version'");
+        }
+
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put(OSGI_FRAMEWORK_UUID, uuid);
-        props.put("org.coderthoughts.framework.ip", publicDNS);
-        props.put("org.coderthoughts.cloud.name", "Red Hat Openshift/DIY/OSGi"); // TODO obtain from underlying cloud
-        props.put("org.coderthoughts.cloud.version", "0.9"); // TODO obtain from underlying cloud
-        props.put("org.coderthoughts.cloud.country", "USA"); // TODO obtain from underlying platform
-        props.put("org.coderthoughts.cloud.location", "US-KS"); // TODO obtain from underlying platform
+        props.put("org.osgi.node.host", publicDNS);
+        props.put("org.osgi.node.host.internal", System.getenv("OPENSHIFT_INTERNAL_IP"));
+        props.put("org.osgi.node.type", gearTypeParts[0]);
+        props.put("org.osgi.node.version", gearTypeParts[1]);
+        props.put("org.osgi.node.country", "USA"); // TODO obtain from underlying platform
+        props.put("org.osgi.node.location", "US-KS"); // TODO obtain from underlying platform
         props.put(Constants.FRAMEWORK_VERSION, context.getProperty(Constants.FRAMEWORK_VERSION));
         props.put(Constants.FRAMEWORK_PROCESSOR, context.getProperty(Constants.FRAMEWORK_PROCESSOR));
         props.put(Constants.FRAMEWORK_OS_NAME, context.getProperty(Constants.FRAMEWORK_OS_NAME));
