@@ -1,6 +1,8 @@
 package org.coderthoughts.cloud.framework.service.impl;
 
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.cxf.dosgi.dsw.ClientContext;
 import org.osgi.framework.BundleContext;
@@ -25,5 +27,13 @@ public class LocalClientInfo implements ClientContext {
     @Override
     public Principal getPrincipal() {
         return null;
+    }
+
+    @Override
+    public Map<String, Object> getProperties() {
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("HostIPAddress", getHostIPAddress());
+        m.put("FrameworkUUID", getFrameworkUUID());
+        return m;
     }
 }
