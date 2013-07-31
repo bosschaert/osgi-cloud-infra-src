@@ -41,7 +41,7 @@
           <instructions>
             <Bundle-SymbolicName>${project.name}</Bundle-SymbolicName>
             <Bundle-Activator>org.coderthoughts.cloud.framework.service.impl.Activator</Bundle-Activator>
-            <Export-Package>org.coderthoughts.cloud.framework.service.api</Export-Package>
+            <Export-Package>org.coderthoughts.cloud.framework.service.api,org.osgi.service.resource*</Export-Package>
             <Private-Package>org.coderthoughts.cloud.framework.service.impl</Private-Package>
           </instructions>
         </configuration>
